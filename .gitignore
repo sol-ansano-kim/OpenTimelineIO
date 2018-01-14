@@ -9,7 +9,6 @@ dist*
 /eco
 /release
 /debug
-/SConstruct
 /*.dblite
 /OpenTimelineIO.env.tmp
 /excons.cache
