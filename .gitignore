@@ -5,3 +5,10 @@ dist*
 *.egg-info
 .coverage
 .DS_store
+
+/eco
+/release
+/debug
+/SConstruct
+/*.dblite
+/OpenTimelineIO.env.tmp
