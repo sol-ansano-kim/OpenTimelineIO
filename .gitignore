@@ -12,3 +12,4 @@ dist*
 /SConstruct
 /*.dblite
 /OpenTimelineIO.env.tmp
+/excons.cache

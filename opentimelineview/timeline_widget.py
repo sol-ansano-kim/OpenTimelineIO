@@ -22,8 +22,9 @@
 # language governing permissions and limitations under the Apache License.
 #
 
-from PySide import QtGui
-from PySide import QtCore
+from Qt import QtWidgets
+from Qt import QtGui
+from Qt import QtCore
 
 import opentimelineio as otio
 
@@ -36,30 +37,30 @@ LABEL_MARGIN = 5
 MARKER_SIZE = 10
 
 
-class _BaseItem(QtGui.QGraphicsRectItem):
+class _BaseItem(QtWidgets.QGraphicsRectItem):
     def __init__(self, item, timeline_range, *args, **kwargs):
         super(_BaseItem, self).__init__(*args, **kwargs)
         self.item = item
         self.timeline_range = timeline_range
 
-        self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
+        self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable)
         self.setBrush(
             QtGui.QBrush(QtGui.QColor(180, 180, 180, 255))
         )
 
-        self.source_in_label = QtGui.QGraphicsSimpleTextItem(self)
-        self.source_out_label = QtGui.QGraphicsSimpleTextItem(self)
-        self.source_name_label = QtGui.QGraphicsSimpleTextItem(self)
+        self.source_in_label = QtWidgets.QGraphicsSimpleTextItem(self)
+        self.source_out_label = QtWidgets.QGraphicsSimpleTextItem(self)
+        self.source_name_label = QtWidgets.QGraphicsSimpleTextItem(self)
 
         self._add_markers()
         self._set_labels()
 
     def paint(self, *args, **kwargs):
-        new_args = [args[0], QtGui.QStyleOptionGraphicsItem()] + list(args[2:])
+        new_args = [args[0], QtWidgets.QStyleOptionGraphicsItem()] + list(args[2:])
         super(_BaseItem, self).paint(*new_args, **kwargs)
 
     def itemChange(self, change, value):
-        if change == QtGui.QGraphicsItem.ItemSelectedHasChanged:
+        if change == QtWidgets.QGraphicsItem.ItemSelectedHasChanged:
             self.setPen(
                 QtGui.QColor(0, 255, 0, 255) if self.isSelected()
                 else QtGui.QColor(0, 0, 0, 255)
@@ -210,7 +211,7 @@ class TransitionItem(_BaseItem):
         shading_poly_f.append(QtCore.QPointF(rect.width(), 0))
         shading_poly_f.append(QtCore.QPointF(0, rect.height()))
 
-        shading_poly = QtGui.QGraphicsPolygonItem(shading_poly_f, parent=self)
+        shading_poly = QtWidgets.QGraphicsPolygonItem(shading_poly_f, parent=self)
         shading_poly.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 30)))
 
         try:
@@ -246,7 +247,7 @@ class NestedItem(_BaseItem):
         self.scene().views()[0].open_stack.emit(self.item)
 
 
-class TrackWidget(QtGui.QGraphicsRectItem):
+class TrackWidget(QtWidgets.QGraphicsRectItem):
     def __init__(self, track, *args, **kwargs):
         super(TrackWidget, self).__init__(*args, **kwargs)
         self.track = track
@@ -288,7 +289,7 @@ class TrackWidget(QtGui.QGraphicsRectItem):
             new_item.counteract_zoom()
 
 
-class Marker(QtGui.QGraphicsPolygonItem):
+class Marker(QtWidgets.QGraphicsPolygonItem):
     def __init__(self, marker, *args, **kwargs):
         self.item = marker
 
@@ -300,15 +301,15 @@ class Marker(QtGui.QGraphicsPolygonItem):
         poly.append(QtCore.QPointF(-0.5 * MARKER_SIZE, -0.5 * MARKER_SIZE))
         super(Marker, self).__init__(poly, *args, **kwargs)
 
-        self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable)
+        self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable)
         self.setBrush(QtGui.QBrush(QtGui.QColor(121, 212, 177, 255)))
 
     def paint(self, *args, **kwargs):
-        new_args = [args[0], QtGui.QStyleOptionGraphicsItem()] + list(args[2:])
+        new_args = [args[0], QtWidgets.QStyleOptionGraphicsItem()] + list(args[2:])
         super(Marker, self).paint(*new_args, **kwargs)
 
     def itemChange(self, change, value):
-        if change == QtGui.QGraphicsItem.ItemSelectedHasChanged:
+        if change == QtWidgets.QGraphicsItem.ItemSelectedHasChanged:
             self.setPen(
                 QtGui.QColor(0, 255, 0, 255) if self.isSelected()
                 else QtGui.QColor(0, 0, 0, 255)
@@ -319,13 +320,13 @@ class Marker(QtGui.QGraphicsPolygonItem):
         self.setTransform(QtGui.QTransform.fromScale(zoom_level, 1.0))
 
 
-class TimeSlider(QtGui.QGraphicsRectItem):
+class TimeSlider(QtWidgets.QGraphicsRectItem):
     def __init__(self, *args, **kwargs):
         super(TimeSlider, self).__init__(*args, **kwargs)
         self.setBrush(QtGui.QBrush(QtGui.QColor(64, 78, 87, 255)))
 
 
-class CompositionWidget(QtGui.QGraphicsScene):
+class CompositionWidget(QtWidgets.QGraphicsScene):
     def __init__(self, composition, *args, **kwargs):
         super(CompositionWidget, self).__init__(*args, **kwargs)
         self.composition = composition
@@ -472,15 +473,15 @@ class CompositionWidget(QtGui.QGraphicsScene):
             self.addItem(marker)
 
 
-class CompositionView(QtGui.QGraphicsView):
+class CompositionView(QtWidgets.QGraphicsView):
 
     open_stack = QtCore.Signal(otio.schema.Stack)
     selection_changed = QtCore.Signal(otio.core.SerializableObject)
 
     def __init__(self, stack, *args, **kwargs):
         super(CompositionView, self).__init__(*args, **kwargs)
-        self.setResizeAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
-        self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setScene(CompositionWidget(stack, parent=self))
         self.setAlignment((QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop))
 
@@ -492,18 +493,18 @@ class CompositionView(QtGui.QGraphicsView):
             self.selection_changed.emit(selection[-1].item)
 
     def mousePressEvent(self, mouse_event):
-        modifiers = QtGui.QApplication.keyboardModifiers()
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
         self.setDragMode(
-            QtGui.QGraphicsView.ScrollHandDrag
+            QtWidgets.QGraphicsView.ScrollHandDrag
             if modifiers == QtCore.Qt.AltModifier
-            else QtGui.QGraphicsView.NoDrag
+            else QtWidgets.QGraphicsView.NoDrag
         )
         self.setInteractive(not modifiers == QtCore.Qt.AltModifier)
         super(CompositionView, self).mousePressEvent(mouse_event)
 
     def mouseReleaseEvent(self, mouse_event):
         super(CompositionView, self).mouseReleaseEvent(mouse_event)
-        self.setDragMode(QtGui.QGraphicsView.NoDrag)
+        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
 
     def wheelEvent(self, event):
         scale_by = 1.0 + float(event.delta()) / 1000
@@ -521,7 +522,7 @@ class CompositionView(QtGui.QGraphicsView):
             item.counteract_zoom(zoom_level)
 
 
-class Timeline(QtGui.QTabWidget):
+class Timeline(QtWidgets.QTabWidget):
 
     selection_changed = QtCore.Signal(otio.core.SerializableObject)
 
@@ -567,7 +568,7 @@ class Timeline(QtGui.QTabWidget):
 
         # cannot close the first tab
         if self.count() == 1:
-            button = self.tabBar().tabButton(0, QtGui.QTabBar.RightSide)
+            button = self.tabBar().tabButton(0, QtWidgets.QTabBar.RightSide)
             if button:
                 button.resize(0, 0)
 
