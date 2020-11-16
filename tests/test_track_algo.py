@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 #
-# Copyright 2017 Pixar Animation Studios
+# Copyright Contributors to the OpenTimelineIO project
 #
 # Licensed under the Apache License, Version 2.0 (the "Apache License")
 # with the following modification; you may not use this file except in
@@ -28,6 +29,7 @@ import unittest
 import copy
 
 import opentimelineio as otio
+import opentimelineio.test_utils as otio_test_utils
 
 # for debugging
 # def print_expanded_tree(seq):
@@ -78,7 +80,7 @@ class TransitionExpansionTests(unittest.TestCase):
         seq.append(trx)
         cl_2 = copy.deepcopy(cl)
         cl_2.name = name + "_post"
-        seq.append(copy.copy(cl))
+        seq.append(copy.deepcopy(cl))
 
         pre_duration = copy.deepcopy(seq[0].source_range.duration)
 
@@ -237,7 +239,7 @@ class TransitionExpansionTests(unittest.TestCase):
         )
 
 
-class TrackTrimmingTests(unittest.TestCase):
+class TrackTrimmingTests(unittest.TestCase, otio_test_utils.OTIOAssertions):
     """ test harness for track trimming function """
 
     def make_sample_track(self):
@@ -337,7 +339,7 @@ class TrackTrimmingTests(unittest.TestCase):
             )
         )
         # it shouldn't have changed at all
-        self.assertEqual(original_track, trimmed)
+        self.assertIsOTIOEquivalentTo(original_track, trimmed)
 
     def test_trim_to_longer_range(self):
         original_track = self.make_sample_track()
@@ -350,7 +352,7 @@ class TrackTrimmingTests(unittest.TestCase):
             )
         )
         # it shouldn't have changed at all
-        self.assertEqual(original_track, trimmed)
+        self.assertJsonEqual(original_track, trimmed)
 
     def test_trim_front(self):
         original_track = self.make_sample_track()
@@ -381,7 +383,7 @@ class TrackTrimmingTests(unittest.TestCase):
             )
         )
         # clip C should have been left alone
-        self.assertEqual(trimmed[1], original_track[2])
+        self.assertIsOTIOEquivalentTo(trimmed[1], original_track[2])
 
     def test_trim_end(self):
         original_track = self.make_sample_track()
@@ -403,7 +405,7 @@ class TrackTrimmingTests(unittest.TestCase):
             )
         )
         # clip A should have been left alone
-        self.assertEqual(trimmed[0], original_track[0])
+        self.assertIsOTIOEquivalentTo(trimmed[0], original_track[0])
         # did clip B get trimmed?
         self.assertEqual(trimmed[1].name, "B")
         self.assertEqual(
@@ -489,6 +491,9 @@ class TrackTrimmingTests(unittest.TestCase):
                 },
                 {
                     "OTIO_SCHEMA": "Transition.1",
+                    "name": "",
+                    "metadata": {},
+                    "transition_type": "",
                     "in_offset": {
                         "OTIO_SCHEMA": "RationalTime.1",
                         "rate": 24,
@@ -531,4 +536,8 @@ class TrackTrimmingTests(unittest.TestCase):
         }
         """, "otio_json")
 
-        self.assertEqual(expected, trimmed)
+        self.assertJsonEqual(expected, trimmed)
+
+
+if __name__ == '__main__':
+    unittest.main()

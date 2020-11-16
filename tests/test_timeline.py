@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Pixar Animation Studios
+# Copyright Contributors to the OpenTimelineIO project
 #
 # Licensed under the Apache License, Version 2.0 (the "Apache License")
 # with the following modification; you may not use this file except in
@@ -25,9 +25,10 @@
 import unittest
 
 import opentimelineio as otio
+import opentimelineio.test_utils as otio_test_utils
 
 
-class TimelineTests(unittest.TestCase):
+class TimelineTests(unittest.TestCase, otio_test_utils.OTIOAssertions):
 
     def test_init(self):
         rt = otio.opentime.RationalTime(12, 24)
@@ -43,7 +44,7 @@ class TimelineTests(unittest.TestCase):
 
         encoded = otio.adapters.otio_json.write_to_string(tl)
         decoded = otio.adapters.otio_json.read_from_string(encoded)
-        self.assertEqual(tl, decoded)
+        self.assertIsOTIOEquivalentTo(tl, decoded)
         self.assertEqual(tl.metadata, decoded.metadata)
 
     def test_range(self):
@@ -129,6 +130,31 @@ class TimelineTests(unittest.TestCase):
         search_range = otio.opentime.TimeRange(rt_start, rt_end)
         self.assertEqual([cl], list(tl.each_clip(search_range)))
 
+        # check to see if full range works
+        search_range = tl.tracks.trimmed_range()
+        self.assertEqual([cl, cl2, cl3], list(tl.each_clip(search_range)))
+
+        # just one clip
+        search_range = cl2.range_in_parent()
+        self.assertEqual([cl2], list(tl.each_clip(search_range)))
+
+        # the last two clips
+        search_range = otio.opentime.TimeRange(
+            start_time=cl2.range_in_parent().start_time,
+            duration=cl2.trimmed_range().duration + rt_end
+        )
+        self.assertEqual([cl2, cl3], list(tl.each_clip(search_range)))
+
+        # no clips
+        search_range = otio.opentime.TimeRange(
+            start_time=otio.opentime.RationalTime(
+                value=-10,
+                rate=rt_start.rate
+            ),
+            duration=rt_end
+        )
+        self.assertEqual([], list(tl.each_clip(search_range)))
+
     def test_str(self):
         self.maxDiff = None
         clip = otio.schema.Clip(
@@ -160,7 +186,7 @@ class TimelineTests(unittest.TestCase):
         tl = otio.schema.timeline_from_clips([clip])
         encoded = otio.adapters.otio_json.write_to_string(tl)
         decoded = otio.adapters.otio_json.read_from_string(encoded)
-        self.assertEqual(tl, decoded)
+        self.assertIsOTIOEquivalentTo(tl, decoded)
 
         string2 = otio.adapters.otio_json.write_to_string(decoded)
         self.assertEqual(encoded, string2)
@@ -198,6 +224,34 @@ class TimelineTests(unittest.TestCase):
         self.assertEqual(
             clip1.media_reference.target_url,
             clip2.media_reference.target_url
+        )
+
+    def test_tracks(self):
+        tl = otio.schema.Timeline(tracks=[
+            otio.schema.Track(
+                name="V1",
+                kind=otio.schema.TrackKind.Video
+            ),
+            otio.schema.Track(
+                name="V2",
+                kind=otio.schema.TrackKind.Video
+            ),
+            otio.schema.Track(
+                name="A1",
+                kind=otio.schema.TrackKind.Audio
+            ),
+            otio.schema.Track(
+                name="A2",
+                kind=otio.schema.TrackKind.Audio
+            ),
+        ])
+        self.assertListEqual(
+            ["V1", "V2"],
+            [t.name for t in tl.video_tracks()]
+        )
+        self.assertListEqual(
+            ["A1", "A2"],
+            [t.name for t in tl.audio_tracks()]
         )
 
 

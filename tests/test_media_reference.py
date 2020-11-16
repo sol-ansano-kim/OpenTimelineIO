@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Pixar Animation Studios
+# Copyright Contributors to the OpenTimelineIO project
 #
 # Licensed under the Apache License, Version 2.0 (the "Apache License")
 # with the following modification; you may not use this file except in
@@ -25,11 +25,12 @@
 """Test harness for Media References."""
 
 import opentimelineio as otio
+import opentimelineio.test_utils as otio_test_utils
 
 import unittest
 
 
-class MediaReferenceTests(unittest.TestCase):
+class MediaReferenceTests(unittest.TestCase, otio_test_utils.OTIOAssertions):
 
     def test_cons(self):
         tr = otio.opentime.TimeRange(
@@ -50,18 +51,18 @@ class MediaReferenceTests(unittest.TestCase):
         missing = otio.schema.MissingReference()
         self.assertMultiLineEqual(
             str(missing),
-            "MissingReference(None, None, {})"
+            "MissingReference(\'\', None, {})"
         )
         self.assertMultiLineEqual(
             repr(missing),
             "otio.schema.MissingReference("
-            "name=None, available_range=None, metadata={}"
+            "name='', available_range=None, metadata={}"
             ")"
         )
 
         encoded = otio.adapters.otio_json.write_to_string(missing)
         decoded = otio.adapters.otio_json.read_from_string(encoded)
-        self.assertEqual(missing, decoded)
+        self.assertIsOTIOEquivalentTo(missing, decoded)
 
     def test_filepath(self):
         filepath = otio.schema.ExternalReference("/var/tmp/foo.mov")
@@ -79,27 +80,23 @@ class MediaReferenceTests(unittest.TestCase):
         # round trip serialize
         encoded = otio.adapters.otio_json.write_to_string(filepath)
         decoded = otio.adapters.otio_json.read_from_string(encoded)
-        self.assertEqual(filepath, decoded)
+        self.assertIsOTIOEquivalentTo(filepath, decoded)
 
     def test_equality(self):
         filepath = otio.schema.ExternalReference(target_url="/var/tmp/foo.mov")
         filepath2 = otio.schema.ExternalReference(
             target_url="/var/tmp/foo.mov"
         )
-        self.assertEqual(filepath, filepath2)
+        self.assertIsOTIOEquivalentTo(filepath, filepath2)
 
         bl = otio.schema.MissingReference()
         self.assertNotEqual(filepath, bl)
 
-        filepath = otio.schema.ExternalReference(target_url="/var/tmp/foo.mov")
         filepath2 = otio.schema.ExternalReference(
             target_url="/var/tmp/foo2.mov"
         )
         self.assertNotEqual(filepath, filepath2)
         self.assertEqual(filepath == filepath2, False)
-
-        bl = otio.schema.MissingReference()
-        self.assertNotEqual(filepath, bl)
 
     def test_is_missing(self):
         mr = otio.schema.ExternalReference(target_url="/var/tmp/foo.mov")
